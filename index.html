@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validador de Contraseña</title>
+    <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.32/build/spline-viewer.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #000;
+        }
+
+        #content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            width: 320px;
+            z-index: 1;
+        }
+
+        #logo-container {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        #logo-container img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        #password-container {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        #countdown {
+            font-size: 18px;
+            color: red;
+            margin-bottom: 20px;
+        }
+
+        input {
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 16px;
+            width: 100%;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #copy-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #validate-btn {
+            background-color: #008CBA;
+            color: white;
+        }
+
+        .error {
+            color: red;
+        }
+
+        #flags {
+            margin-top: 20px;
+        }
+
+        .flag-btn {
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .flag-btn img {
+            width: 30px;
+            height: 20px;
+            border-radius: 50%;
+        }
+
+        spline-viewer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Fondo Spline -->
+    <spline-viewer url="https://prod.spline.design/4OubZopOs0jlpCTa/scene.splinecode"></spline-viewer>
+
+    <!-- Contenido de la página -->
+    <div id="content">
+        <div id="logo-container">
+            <!-- Espacio para el logo -->
+            <img src="logohd.png" alt="Logo"> <!-- Reemplaza "logo.png" con la ruta de tu logo 3D redondeado -->
+        </div>
+
+        <h2 id="title">Acceso Seguro</h2>
+        
+        <div id="password-container"></div>
+        <div id="countdown"></div>
+        
+        <button id="copy-btn">Copiar contraseña</button>
+        <input type="text" id="password-input" placeholder="Introduce la contraseña">
+        <button id="validate-btn">Validar</button>
+        
+        <p id="error-msg" class="error"></p>
+
+        <!-- Banderas para seleccionar idioma -->
+        <div id="flags">
+            <button class="flag-btn" onclick="setLanguage('es')">
+                <img src="https://flagcdn.com/w20/es.png" alt="España">
+            </button>
+            <button class="flag-btn" onclick="setLanguage('en')">
+                <img src="https://flagcdn.com/w20/us.png" alt="EEUU">
+            </button>
+            <button class="flag-btn" onclick="setLanguage('fr')">
+                <img src="https://flagcdn.com/w20/fr.png" alt="Francia">
+            </button>
+            <button class="flag-btn" onclick="setLanguage('zh')">
+                <img src="https://flagcdn.com/w20/cn.png" alt="China">
+            </button>
+            <button class="flag-btn" onclick="setLanguage('it')">
+                <img src="https://flagcdn.com/w20/it.png" alt="Italia">
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentPassword = "";
+        let countdown = 30; // 30 segundos de cuenta regresiva
+        const countdownElement = document.getElementById("countdown");
+        const passwordContainer = document.getElementById("password-container");
+        const errorMsg = document.getElementById("error-msg");
+
+        // Traducciones para cada idioma
+        const translations = {
+            es: {
+                title: "Acceso Seguro",
+                placeholder: "Introduce la contraseña",
+                copyBtn: "Copiar contraseña",
+                validateBtn: "Validar",
+                error: "Contraseña incorrecta. Inténtalo de nuevo."
+            },
+            en: {
+                title: "Secure Access",
+                placeholder: "Enter the password",
+                copyBtn: "Copy password",
+                validateBtn: "Validate",
+                error: "Incorrect password. Try again."
+            },
+            fr: {
+                title: "Accès Sécurisé",
+                placeholder: "Entrez le mot de passe",
+                copyBtn: "Copier le mot de passe",
+                validateBtn: "Valider",
+                error: "Mot de passe incorrect. Réessayez."
+            },
+            zh: {
+                title: "安全访问",
+                placeholder: "输入密码",
+                copyBtn: "复制密码",
+                validateBtn: "验证",
+                error: "密码错误。再试一次。"
+            },
+            it: {
+                title: "Accesso Sicuro",
+                placeholder: "Inserisci la password",
+                copyBtn: "Copia password",
+                validateBtn: "Convalida",
+                error: "Password errata. Riprova."
+            }
+        };
+
+        // Función para cambiar el idioma
+        function setLanguage(lang) {
+            const translation = translations[lang];
+            document.getElementById("title").textContent = translation.title;
+            document.getElementById("password-input").placeholder = translation.placeholder;
+            document.getElementById("copy-btn").textContent = translation.copyBtn;
+            document.getElementById("validate-btn").textContent = translation.validateBtn;
+            errorMsg.textContent = ""; // Limpiar error en cambio de idioma
+        }
+
+        // Función para generar una contraseña aleatoria de 6 caracteres
+        function generatePassword() {
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            let password = "";
+            for (let i = 0; i < 6; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return password;
+        }
+
+        // Actualizar la contraseña aleatoria y reiniciar el temporizador
+        function updatePassword() {
+            currentPassword = generatePassword();
+            passwordContainer.textContent = currentPassword;
+            countdown = 30;
+            updateCountdown();
+        }
+
+        // Actualizar el temporizador cada segundo
+        function updateCountdown() {
+            countdownElement.textContent = `Tiempo restante: ${countdown} segundos`;
+            if (countdown > 0) {
+                countdown--;
+                setTimeout(updateCountdown, 1000);
+            } else {
+                updatePassword(); // Genera una nueva contraseña al finalizar el tiempo
+            }
+        }
+
+        // Copiar la contraseña al portapapeles
+        document.getElementById("copy-btn").addEventListener("click", function() {
+            navigator.clipboard.writeText(currentPassword).then(() => {
+                alert("Contraseña copiada al portapapeles");
+            }).catch(err => {
+                alert("Error al copiar la contraseña: " + err);
+            });
+        });
+
+        // Validar la contraseña ingresada
+        document.getElementById("validate-btn").addEventListener("click", function() {
+            const inputPassword = document.getElementById("password-input").value;
+            if (inputPassword === currentPassword) {
+                errorMsg.textContent = "";
+                window.location.href = "meet.html"; // Redirigir a meet.html si la contraseña es correcta
+            } else {
+                errorMsg.textContent = translations[document.documentElement.lang || 'es'].error;
+            }
+        });
+
+        // Iniciar la primera generación de contraseña y temporizador
+        updatePassword();
+    </script>
+
+</body>
+</html>
